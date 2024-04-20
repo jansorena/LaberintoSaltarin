@@ -1,12 +1,14 @@
 import pygame
 from laberinto import Laberinto
-from agente import Agente
 
 def main():
+    # Inicializar pygame
     pygame.init()
     
+    # Parsear el input
     mazes = Laberinto.parse_arguments()
-
+    
+    # Iterar por los distintos laberintos
     for maze in mazes:
         Laberinto.draw(maze)
      

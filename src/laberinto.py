@@ -3,19 +3,25 @@ import pygame
 from agente import Agente
 
 # Constantes globales
-MARGIN = 10
-WIDTH = 100
-HEIGHT = 100
+MARGIN = 5
+WIDTH = 60
+HEIGHT = 60
+BUTTON_WIDTH = 100
+BUTTON_HEIGHT = 50
+SIZE_FONT = 50
+BUTTON_FONT = 25
+
+# Colores
 START_COLOR = (255, 255, 0)
 END_COLOR = (255, 0, 0)
 VISITED_COLOR = (0, 255, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BUTTON_COLOR = (0, 0, 255)
-BUTTON_WIDTH = 80
-BUTTON_HEIGHT = 40
+GREEN = (0, 255, 0)
 
 class Laberinto:
+    # Constructor
     def __init__(self, m, n, start_x, start_y, end_x, end_y, grid):
         self.m = m
         self.n = n
@@ -27,6 +33,7 @@ class Laberinto:
         self.agente = Agente()
         self.visited = [[False for _ in range(n)] for _ in range(m)]
 
+    # Metodo que parsea el input
     @staticmethod
     def parse_input(filename):
         mazes = []
@@ -44,6 +51,7 @@ class Laberinto:
                 mazes.append(Laberinto(m, n, start_x, start_y, end_x, end_y, grid))
         return mazes
 
+    # Leer la linea de entrada
     @classmethod
     def parse_arguments(cls):
         parser = argparse.ArgumentParser(description="Parse and solve jumping mazes.")
@@ -56,6 +64,7 @@ class Laberinto:
             print(f"Error: El archivo '{args.filename}' no se encuentra.")
             exit()
 
+    # Metodo que dibuja el laberinto
     def draw_grid(self, screen):
         for row in range(self.m):
             for column in range(self.n):
@@ -64,7 +73,7 @@ class Laberinto:
                 elif (row, column) == (self.end_x, self.end_y) and self.visited[row][column]:
                     color = END_COLOR
                 elif self.visited[row][column]:
-                    color = (0, 255, 0)  # Green
+                    color = GREEN
                 else:
                     color = WHITE
                 pygame.draw.rect(screen,
@@ -74,31 +83,35 @@ class Laberinto:
                             WIDTH,
                             HEIGHT])
 
+    # Metodo que dibuja los botones
     def draw_buttons(self, screen):
-        WINDOW_SIZE = [WIDTH * self.n + MARGIN * (self.n - 1), HEIGHT * self.m + MARGIN * (self.m - 1) + 100]
-        button_font = pygame.font.Font(None, 50)
+        button_font = pygame.font.Font(None, BUTTON_FONT)
 
-        # Draw the buttons with a border
-        pygame.draw.rect(screen, BLACK, (50 - 2, WINDOW_SIZE[1] - 75 - 2, 200 + 4, 50 + 4))
-        pygame.draw.rect(screen, BLACK, (300 - 2, WINDOW_SIZE[1] - 75 - 2, 200 + 4, 50 + 4))
-        self.dfs_button = pygame.draw.rect(screen, BUTTON_COLOR, (50, WINDOW_SIZE[1] - 75, 200, 50))
-        self.cu_button = pygame.draw.rect(screen, BUTTON_COLOR, (300, WINDOW_SIZE[1] - 75, 200, 50))
+        # Define the button positions
+        # Define the button positions
+        dfs_button_pos = ((WIDTH * self.n + MARGIN * (self.n - 1) - BUTTON_WIDTH) // 2, self.m * HEIGHT + 50)
+        cu_button_pos = ((WIDTH * self.n + MARGIN * (self.n - 1) - BUTTON_WIDTH) // 2, self.m * HEIGHT + 100 + BUTTON_HEIGHT)
+
+
+
+        # Draw the buttons
+        self.dfs_button = pygame.draw.rect(screen, BUTTON_COLOR, (*dfs_button_pos, BUTTON_WIDTH, BUTTON_HEIGHT))
+        self.cu_button = pygame.draw.rect(screen, BUTTON_COLOR, (*cu_button_pos, BUTTON_WIDTH, BUTTON_HEIGHT))
 
         # Render the button text
         dfs_text = button_font.render('DFS', True, WHITE)
         cu_text = button_font.render('CU', True, WHITE)
 
         # Draw the button text
-        screen.blit(dfs_text, (50 + (200 - dfs_text.get_width()) // 2, WINDOW_SIZE[1] - 75 + (50 - dfs_text.get_height()) // 2))
-        screen.blit(cu_text, (300 + (200 - cu_text.get_width()) // 2, WINDOW_SIZE[1] - 75 + (50 - cu_text.get_height()) // 2))
-
+        screen.blit(dfs_text, (dfs_button_pos[0] + (BUTTON_WIDTH - dfs_text.get_width()) // 2, dfs_button_pos[1] + (BUTTON_HEIGHT - dfs_text.get_height()) // 2))
+        screen.blit(cu_text, (cu_button_pos[0] + (BUTTON_WIDTH - cu_text.get_width()) // 2, cu_button_pos[1] + (BUTTON_HEIGHT - cu_text.get_height()) // 2))
+    
     def draw_numbers(self, screen):
-        font = pygame.font.Font(None, 100)
+        font = pygame.font.Font(None, SIZE_FONT)
+        
         for row in range(self.m):
             for column in range(self.n):
-                # Render the number
                 text = font.render(str(self.grid[row][column]), True, BLACK)
-                # Calculate the position of the text
                 text_rect = text.get_rect(center=((MARGIN + WIDTH) * column + MARGIN + WIDTH // 2,
                                                 (MARGIN + HEIGHT) * row + MARGIN + HEIGHT // 2))
                 screen.blit(text, text_rect)
@@ -118,7 +131,7 @@ class Laberinto:
         pygame.font.init()
 
         # Set the HEIGHT and WIDTH of the screen
-        WINDOW_SIZE = [WIDTH * self.n + MARGIN * (self.n - 1), HEIGHT * self.m + MARGIN * (self.m - 1) + 100]
+        WINDOW_SIZE = [WIDTH * self.n + MARGIN * (self.n - 1), HEIGHT * self.m + MARGIN * (self.m - 1) + 200]
         screen = pygame.display.set_mode(WINDOW_SIZE)
 
         # Set title of screen
@@ -140,5 +153,6 @@ class Laberinto:
                         self.agente.solveDFS(self, screen)
                         self.visited = [[False for _ in range(self.n)] for _ in range(self.m)]
                     elif self.cu_button.collidepoint(pygame.mouse.get_pos()):
+                        print("Costo Uniforme")
                         self.agente.solveCostoUniforme(self, screen)
                         self.visited = [[False for _ in range(self.n)] for _ in range(self.m)]
